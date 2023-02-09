@@ -1,4 +1,4 @@
-VERSION   ?=$(shell cat app/.version)
+VERSION   ?=$(shell cat .version)
 
 all: help
 
