@@ -9,7 +9,6 @@ steps:
   - id: build
     name: gcr.io/cloud-builders/docker@sha256:1d3fcb164b422c72e13786fd4a03b6da3605d4d65ed245b66941102595795fac
     entrypoint: /bin/bash
-    dir: app
     args:
     - -c
     - |-
