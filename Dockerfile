@@ -18,6 +18,8 @@ FROM $RUN_IMG
 LABEL workstation.version="${VERSION}"
 COPY --from=base /etc/workstation-startup.d/ /etc/workstation-startup.d/
 COPY --from=base /google/scripts/entrypoint.sh /google/scripts/entrypoint.sh
+COPY --from=base /opt/code-oss/ /opt/code-oss/
+
 
 WORKDIR /google/scripts
 ENTRYPOINT ["./entrypoint.sh"]
