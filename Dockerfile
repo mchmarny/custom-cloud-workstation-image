@@ -16,10 +16,12 @@ ENV VERSION=${VERSION}
 # RUN
 FROM $RUN_IMG
 LABEL workstation.version="${VERSION}"
-COPY --from=base /usr/bin/workstation-startup/ /usr/bin/workstation-startup/
+
 COPY --from=base /etc/workstation-startup.d/ /etc/workstation-startup.d/
-COPY --from=base /google/scripts/entrypoint.sh /google/scripts/entrypoint.sh
 COPY --from=base /opt/code-oss/ /opt/code-oss/
+COPY --from=base /usr/bin/workstation-startup /usr/bin/workstation-startup
+COPY --from=base /google/scripts/entrypoint.sh /google/scripts/entrypoint.sh
+
 
 
 WORKDIR /google/scripts
