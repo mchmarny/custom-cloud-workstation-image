@@ -1,5 +1,5 @@
 ARG BASE_IMG=us-central1-docker.pkg.dev/cloud-workstations-images/predefined/code-oss:latest
-ARG RUN_IMG=cgr.dev/chainguard/go:latest
+ARG RUN_IMG=golang@sha256:745aa72cefb6f9527c1588590982c0bdf85a1be5d611dda849e54b5dbf551506
 
 # BASE
 FROM $BASE_IMG as base
