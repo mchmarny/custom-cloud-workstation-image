@@ -12,7 +12,7 @@ steps:
     args:
     - -c
     - |-
-      docker build --build-arg VERSION=${TAG_NAME} \
+      docker build \
         -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${COMMIT_SHA}" \
         -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${_APP_NAME}:${TAG_NAME}" \
         .

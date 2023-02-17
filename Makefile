@@ -6,6 +6,12 @@ version: ## Prints the current demo app version
 	@echo $(VERSION)
 .PHONY: version
 
+build: ## Builds the container image
+	docker build --build-arg VERSION=$(VERSION) \
+        -t custom-cloud-workstation-image:$(VERSION) \
+        .
+.PHONY: build
+
 push: ## Pushes all outstanding changes to the remote repository
 	git add --all
 	git commit -m 'demo'
