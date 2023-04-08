@@ -9,7 +9,6 @@ tmp
 *.out
 
 # Binaries
-bin
 dist
 
 # Keys 

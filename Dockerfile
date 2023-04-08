@@ -38,9 +38,12 @@ RUN \
 COPY --from=golang:latest /usr/local/go/ /usr/local/go/
 RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
-COPY ./scripts/. /
-
 # Ensure diff sha when only version is changed
 COPY .version /.version
 
-ENTRYPOINT ["/entrypoint"]
+# Merge in files from the assets directory
+# See: https://source.corp.google.com/dev-con/workstation/base/Dockerfile
+COPY ./assets/. /
+
+ENTRYPOINT ["/google/scripts/entrypoint.sh"]
+

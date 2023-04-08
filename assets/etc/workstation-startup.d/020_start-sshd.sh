@@ -1,18 +1,20 @@
 #!/bin/bash
 
-# user
-groups=sudo
-useradd -m user -G $groups --shell /bin/bash > /dev/null
-passwd -d user >/dev/null
-echo "%sudo ALL=NOPASSWD: ALL" >> /etc/sudoers
+#
+# Startup script to start OpenSSH Daemon.
+#
 
-# sshd
+echo "Starting 020_start-sshd.sh"
+
+set -e
+
+echo "Generating host SSH keys"
 yes | ssh-keygen -q -f /etc/ssh/ssh_host_rsa_key -t rsa -C 'host' -N '' > /dev/null
 yes | ssh-keygen -q -f /etc/ssh/ssh_host_ecdsa_key -t ecdsa -C 'host' -N '' > /dev/null
 yes | ssh-keygen -q -f /etc/ssh/ssh_host_ed25519_key -t ed25519 -C 'host' -N '' > /dev/null
 
+echo "Starting sshd"
 mkdir /run/sshd
 /usr/sbin/sshd
 
-runuser user -c "code-server --auth=none --port=80 --host=0.0.0.0" &
-runuser user -c "sleep infinity"
+echo "Exiting 020_start-sshd.sh"
