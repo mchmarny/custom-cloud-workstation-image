@@ -7,7 +7,6 @@ substitutions:
 
 steps:
 
-  # Build image
   - id: build
     name: gcr.io/cloud-builders/docker
     entrypoint: /bin/bash
