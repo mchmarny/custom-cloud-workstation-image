@@ -39,7 +39,7 @@ RUN echo "Installing VS Code server 4.9.1" && \
 
 # Merge in files from the assets directory
 # See: https://source.corp.google.com/dev-con/workstation/base/Dockerfile
-COPY ./assets/. /
+COPY ./base/assets/. /
 
 # Ensure diff sha when only version is changed
 COPY ./version /version

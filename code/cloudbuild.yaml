@@ -2,7 +2,7 @@
 
 substitutions:
   _REPO: ws-images
-  _IMAGE: code-go-dev-clean
+  _IMAGE: code-go-dev-code
   _POOL: big-pool
 
 steps:
@@ -14,7 +14,8 @@ steps:
     args:
     - -c
     - |-
-      docker build \
+      docker image build \
+        -f code-minus/cloudbuild.yaml \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${COMMIT_SHA}" \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${TAG_NAME}" \
         .
