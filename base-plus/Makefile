@@ -1,6 +1,6 @@
-VERSION   ?=$(shell cat .version)
-REGISTRY  ?=us-west1-docker.pkg.dev/cloudy-build/custom-cloud-workstation-image
-IMAGE     ?=ws-dev
+VERSION   ?=$(shell cat version)
+REGISTRY  ?=us-docker.pkg.dev/cloudy-demos/ws-images
+IMAGE     ?=code-go-dev-plus
 
 all: help
 
@@ -8,8 +8,8 @@ all: help
 version: ## Prints the current demo app version
 	@echo $(VERSION)
 
-.PHONY: build
-build: ## Build container image
+.PHONY: image
+image: ## Build container image
 	docker build -t $(REGISTRY)/$(IMAGE):$(VERSION) -t latest .
 
 .PHONY: push
