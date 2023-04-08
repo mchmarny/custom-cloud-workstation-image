@@ -40,4 +40,7 @@ RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
 COPY ./scripts/. /
 
-ENTRYPOINT ["/scripts/entrypoint"]
+# Ensure diff sha when only version is changed
+COPY .version /.version
+
+ENTRYPOINT ["/entrypoint"]
