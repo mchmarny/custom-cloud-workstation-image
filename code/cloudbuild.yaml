@@ -14,7 +14,8 @@ steps:
     - -c
     - |-
       docker image build \
-        -f code-minus/cloudbuild.yaml \
+        --platform linux/amd64 \
+        -f code/cloudbuild.yaml \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${COMMIT_SHA}" \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${TAG_NAME}" \
         .

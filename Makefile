@@ -13,6 +13,7 @@ version: ## Prints the current demo app version
 .PHONY: image-base
 image-base: ## Build base container image
 	docker image build \
+		--platform linux/amd64 \
 		-f base/Dockerfile \
 		-t $(REGISTRY)/$(IMAGE_BASE):$(VERSION) -t latest \
 		.
@@ -26,6 +27,7 @@ run-base: ## Run previously built base container image
 .PHONY: image-code
 image-code: ## Build code container image
 	docker image build \
+		--platform linux/amd64 \
 		-f code/Dockerfile \
 		-t $(REGISTRY)/$(IMAGE_CODE):$(VERSION) -t latest \
 		.
