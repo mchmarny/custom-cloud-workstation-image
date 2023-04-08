@@ -1,0 +1,5 @@
+PermitEmptyPasswords yes
+PrintLastLog no
+PrintMotd no
+PubkeyAuthentication no
+Subsystem sftp /usr/lib/openssh/sftp-server

@@ -1,14 +1,45 @@
-FROM us-west1-docker.pkg.dev/cloud-workstations-images/predefined/code-oss:latest
+FROM ubuntu:18.04
 
-# remove unecessary packages
-RUN apt -y remove php8.2 php-common php8.2-cli php8.2-common php8.2-opcache php8.2-readline openjdk-11-jdk-headless openjdk-11-jdk openjdk-11-jre-headless openjdk-11-jre java-common google-cloud-sdk-bigtable-emulator google-cloud-sdk-cbt google-cloud-sdk-datastore-emulator google-cloud-sdk-kpt google-cloud-sdk-minikube google-cloud-sdk-skaffold
+RUN \
+    echo "Updating base image" && \
+    apt-get -y update && \
+    apt-get -y upgrade
 
-# update what's left
-RUN apt-get update && apt-get -y upgrade
+RUN \
+    echo "Installing Python 3" && \
+    apt-get -y install python3-pip python3-dev && \
+    cd /usr/local/bin && \
+    ln -s /usr/bin/python3 python && \
+    pip3 install --upgrade pip
 
-# add go
-COPY --from=golang:1.20.1 /usr/local/go/ /usr/local/go/
+RUN \
+    echo "Installing Open SSH" && \
+    apt-get -y install openssh-client openssh-server && \
+    rm -rf /etc/ssh/ssh_host_*  # remove auto-created host keys
 
-# start
-WORKDIR /google/scripts
-ENTRYPOINT ["./entrypoint.sh"]
+RUN \
+    echo "Installing git" && \
+    apt-get -y install git
+
+RUN \
+    echo "Installing curl" && \
+    apt-get -y install curl
+
+RUN \
+    echo "Installing go" && \
+    curl -fsSL https://go.dev/dl/go1.20.3.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.20.3.linux-amd64.tar.gz \
+    echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
+
+RUN \
+    echo "Installing repo" && \
+    curl -o /usr/bin/repo https://storage.googleapis.com/git-repo-downloads/repo && \
+    chmod a+rx /usr/bin/repo
+
+RUN \
+    echo "Installing VS Code server 4.9.1" && \
+    (curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.9.1)
+
+COPY ./scripts/. /
+
+ENTRYPOINT ["/scripts/entrypoint"]
