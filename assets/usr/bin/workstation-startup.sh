@@ -8,7 +8,7 @@
 # modifying startup tasks when extending an image.
 #
 
-echo "Starting workstation-startup"
+echo "CWD: Starting workstation-startup"
 
 set -e
 
@@ -20,4 +20,4 @@ for task in /etc/workstation-startup.d/*; do
   fi
 done
 
-echo "Exiting workstation-startup"
+echo "CWD: Exiting workstation-startup"
