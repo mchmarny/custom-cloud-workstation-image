@@ -15,7 +15,7 @@ set -e
 for task in /etc/workstation-startup.d/*; do
   # If this is an executable shell script, execute it.
   if [[ "${task##*.}" -eq "sh" ]] && [[ -x "${task}" ]]; then
-    echo "Running ${task}..."
+    echo "CWD: Running ${task}..."
     "${task}"
   fi
 done
