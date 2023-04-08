@@ -26,12 +26,6 @@ RUN \
     apt-get -y install curl
 
 RUN \
-    echo "Installing go" && \
-    curl -fsSL https://go.dev/dl/go1.20.3.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf go1.20.3.linux-amd64.tar.gz \
-    echo "export PATH=$PATH:/usr/local/go/bin" >> /etc/profile
-
-RUN \
     echo "Installing repo" && \
     curl -o /usr/bin/repo https://storage.googleapis.com/git-repo-downloads/repo && \
     chmod a+rx /usr/bin/repo
@@ -39,6 +33,10 @@ RUN \
 RUN \
     echo "Installing VS Code server 4.9.1" && \
     (curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.9.1)
+
+# Install Go
+COPY --from=golang:latest /usr/local/go/ /usr/local/go/
+RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
 COPY ./scripts/. /
 
