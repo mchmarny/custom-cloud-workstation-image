@@ -1,13 +1,7 @@
 # custom-cloud-workstation-image
 
-```shell
-docker build \
-    -t us-west1-docker.pkg.dev/cloudy-build/custom-cloud-workstation-image/ws-dev \
-    .
-```
+Custom Cloud Workstations image
 
-```shell
-docker container run --rm -it \
-    --entrypoint /bin/sh \
-    us-west1-docker.pkg.dev/cloudy-build/custom-cloud-workstation-image/ws-dev
-```
+# Disclaimer
+
+This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
