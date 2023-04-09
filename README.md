@@ -22,6 +22,17 @@ export AR_REPO="ws-images"
 export WS_NAME="dev"
 ```
 
+### repo 
+
+Create Artifact Registry: 
+
+```shell
+gcloud artifacts repositories create $AR_REPO \
+    --location=$REGION \
+    --repository-format=docker \
+    --immutable-tags
+```
+
 ### image
 
 To build a custom image for Cloud Workstations (CW) using the provided docker file, first, create a GitHub trigger in GCB using the [provided build configurations file](cloudbuild.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#build_trigger):
@@ -33,7 +44,7 @@ gcloud beta builds triggers create github \
     --name=custom-cloud-workstation-image \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --repo-name=custom-cloud-workstation-image \
+    --repo-name=WS_NAME-cloud-workstation-image \
     --repo-owner=$GH_USER \
     --tag-pattern="v*" \
     --build-config=cloudbuild.yaml \
@@ -81,18 +92,7 @@ The presence of `"reconciling": true` indicates that the cluster is still being 
 
 Once the cluster is configured and the above `describe` command returns confirmation with `network` information, you are ready to create workstation configuration. To do this you will need some information. 
 
-Start by getting the fully-qualified URI (with digest) of the image created by the above step:
-
-```shell
-export IMAGE=$(gcloud artifacts docker images list \
-    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/ws-go-code \
-    --format='value[separator="@"](IMAGE,DIGEST)' \
-    --include-tags \
-    --filter="tags:$(cat ./version)")
-echo $IMAGE
-```
-
-Next, create a service account which will be used to run the workstation: 
+Start by creating a service account which will be used to run the workstation: 
 
 ```shell
 gcloud iam service-accounts create $WS_NAME-workstation-runner
@@ -121,6 +121,19 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
     --condition=None
 ```
 
+Next, get the fully-qualified URI (with digest) of the image created by the above step:
+
+> That assumes you have tagged your repo already and the Cloud Build pipeline successfully build the image.
+
+```shell
+export IMAGE=$(gcloud artifacts docker images list \
+    $REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/ws-go-code \
+    --format='value[separator="@"](IMAGE,DIGEST)' \
+    --include-tags \
+    --filter="tags:$(cat ./version)")
+echo $IMAGE
+```
+
 Finally, create the workstation configuration: 
 
 ```shell
@@ -145,11 +158,11 @@ gcloud beta workstations configs create $WS_NAME-config \
 Finally, with cluster and configuration created, the last step is the actual workstation:
 
 ```shell
-gcloud beta workstations create dev-workstation \
+gcloud beta workstations create $WS_NAME-workstation \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --cluster=dev-cluster \
-    --config=dev-config
+    --cluster=$WS_NAME-cluster \
+    --config=$WS_NAME-config
 ```
 
 At this point you should be able to `start` and `launch` the newly created workstation
@@ -158,25 +171,9 @@ At this point you should be able to `start` and `launch` the newly created works
 open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
 ```
 
-#### update
+#### updates
 
-Whenever you build a new image, you can just update the config. Start by capturing the new image digest:
-
-```shell
-export IMAGE=$(gcloud artifacts docker images list \
-    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
-    --format='value[separator="@"](IMAGE,DIGEST)' \
-    --include-tags \
-    --filter="tags:$(cat ./version)")
-```
-
-```shell
-gcloud beta workstations configs update dev-config \
-    --project=$PROJECT_ID \
-    --region=$REGION \
-    --cluster=dev-cluster \
-    --container-custom-image=$IMAGE
-```
+Whenever you build a new image (i.e. tag release), if the above created config will be automatically updated if it exists.
 
 > If the workstation is already running you will have to stop and start it again for the new image to take effect.
 
