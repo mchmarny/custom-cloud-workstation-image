@@ -203,14 +203,16 @@ Now, as you edit the included [Dockerfile](./Dockerfile) to add tools or change 
 
 ### user config options 
 
-The configuration you define in the image itself are global and will apply to each user of that image. Some settings like git or VS Code configuration will have to be done by the users. Still, there are way to make this process more consistent and easier to execute. 
+Any configuration you make in the user directory in the Dockerfile will be overwritten by Cloud Workstations when it dynamically attaches persistent disk backing each user's home directory at runtime. 
 
-In the [assets/setup](assets/setup) folder, your will find a couple of these kinds of configurations: 
+So any configuration you want to enable at the user-level, like configuring git or defining default VS Code settings will have to be done after launch. Still, there are way to make this process more consistent and easier to execute. 
 
-* `git` - Sets git configuration based on user input (available in workstation via `/setup/git`)
+In the [assets/setup](assets/setup) folder, your will find a couple of examples of these kinds of configurations:
+
+* `git` - Sets up git configuration based on user input (available in workstation via `/setup/git`)
 * `code` - Sets up common VS Code settings (available in workstation via `/setup/code`)
 
-Add your own to minimize the amount of steps users will need to take to make your workstation usable. Their settings will be persisted automatically by Cloud Workstations, even as you update the base image. Because of that aim for the setup scripts to be idempotent. 
+The user home settings will be persisted automatically by Cloud Workstations, even as you update the base image. Because of that aim for the setup scripts to be idempotent, so that they can be successfully applied whether this is the initial setup or an update. 
 
 ## debug
 
