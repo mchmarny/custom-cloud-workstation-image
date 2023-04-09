@@ -13,9 +13,11 @@ version: ## Prints the current demo app version
 image: ## Build base container image
 	docker image build \
 		--platform linux/amd64 \
-		-t $(REGISTRY)/$(IMAGE):$(VERSION) -t latest \
+		-t $(REGISTRY)/$(IMAGE):$(VERSION) \
+		-t $(REGISTRY)/$(IMAGE):latest \
 		.
-	docker image push --all-tags $(REGISTRY)/$(IMAGE)
+	docker image push $(REGISTRY)/$(IMAGE):$(VERSION)
+	docker image push $(REGISTRY)/$(IMAGE):latest
 
 .PHONY: run
 run: ## Run previously built base container image

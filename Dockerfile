@@ -8,6 +8,7 @@ FROM $BASE_IMAGE
 
 # workstation variables
 # https://github.com/coder/code-server/releases
+# can't use 4.11 until proxy domain can be set
 ARG CODE_VERSION=4.10.0
 
 ENV CODE_VERSION=$CODE_VERSION
