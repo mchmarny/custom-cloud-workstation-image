@@ -33,7 +33,7 @@ gcloud artifacts repositories create $AR_REPO \
     --immutable-tags
 ```
 
-### image
+### trigger
 
 To build a custom image for Cloud Workstations (CW) using the provided docker file, first, create a GitHub trigger in GCB using the [provided build configurations file](cloudbuild.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#build_trigger):
 
@@ -44,22 +44,27 @@ gcloud beta builds triggers create github \
     --name=custom-cloud-workstation-image \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --repo-name=WS_NAME-cloud-workstation-image \
+    --repo-name=custom-cloud-workstation-image \
     --repo-owner=$GH_USER \
     --tag-pattern="v*" \
     --build-config=cloudbuild.yaml \
     --substitutions=_REPO=$AR_REPO,_CLUSTER=$WS_NAME-cluster,_CONFIG=$WS_NAME-config
 ```
 
-To trigger an actual build of this image, first, update the [version](./version) file to the next canonical version, commit and push that change in git, and run `make tag`.
+### image
 
-### workstation 
+To trigger an actual build of this image, first, update the [version](./version) file to the next canonical version, commit and push that change in git, and run:
 
-This section will overview the Cloud Workstation configuration to use the above created image: 
+```shell
+git tag -s -m "version bump" $(cat ./version)
+git push origin $(cat ./version)
+```
 
-#### cluster 
+### cluster 
 
-To create a cluster: 
+This section will overview the Cloud Workstation configuration to use the above created image. Create a cluster: 
+
+> More info on the parameters available in this command [here](https://cloud.google.com/sdk/gcloud/reference/beta/workstations/clusters/create)
 
 ```shell
 gcloud beta workstations clusters create $WS_NAME-cluster \
@@ -68,7 +73,7 @@ gcloud beta workstations clusters create $WS_NAME-cluster \
     --async
 ```
 
-This process can take as much as 20 min. Use the `describe` command to check on its status:
+You only have to run this once, but this process can take as much as 20 min. Use the `describe` command to check on its status:
 
 ```shell
 gcloud beta workstations clusters describe $WS_NAME-cluster \
@@ -76,7 +81,7 @@ gcloud beta workstations clusters describe $WS_NAME-cluster \
     --region=$REGION
 ```
 
-The presence of `"reconciling": true` indicates that the cluster is still being provisioned. When complete, the response of the above command will look something like this: 
+The presence of `"reconciling": true` indicates that the cluster **is still being provisioned**. When complete, the response of the above command will look something like this (notice `network` is now populated): 
 
 ```json
 {
@@ -88,7 +93,7 @@ The presence of `"reconciling": true` indicates that the cluster is still being 
 }
 ```
 
-#### config
+### config
 
 Once the cluster is configured and the above `describe` command returns confirmation with `network` information, you are ready to create workstation configuration. To do this you will need some information. 
 
@@ -101,29 +106,31 @@ gcloud iam service-accounts create $WS_NAME-workstation-runner
 Export that account: 
 
 ```shell
-export WS_RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
+export RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
 ```
 
-At minimum, that service account has to have two roles: 
+At minimum, that service account has to have these roles: 
 
 ```shell
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$WS_RUNNER_SA" \
+    --member="serviceAccount:$RUNNER_SA" \
     --role="roles/workstations.workstationCreator" \
     --condition=None
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$WS_RUNNER_SA" \
+    --member="serviceAccount:$RUNNER_SA" \
     --role="roles/workstations.operationViewer" \
     --condition=None
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$WS_RUNNER_SA" \
+    --member="serviceAccount:$RUNNER_SA" \
     --role="roles/artifactregistry.reader" \
     --condition=None
 ```
 
+> Depending on what you will do with this workstation, you may want to add additional roles. 
+
 Next, get the fully-qualified URI (with digest) of the image created by the above step:
 
-> That assumes you have tagged your repo already and the Cloud Build pipeline successfully build the image.
+> That assumes you have tagged your repo already, and the Cloud Build pipeline successfully built the image.
 
 ```shell
 export IMAGE=$(gcloud artifacts docker images list \
@@ -142,7 +149,7 @@ gcloud beta workstations configs create $WS_NAME-config \
     --region=$REGION \
     --cluster=$WS_NAME-cluster \
     --container-custom-image=$IMAGE \
-    --service-account=$WS_RUNNER_SA \
+    --service-account=$RUNNER_SA \
     --machine-type=e2-standard-8 \
     --pd-disk-type=pd-ssd \
     --pd-disk-size=200 \
@@ -153,7 +160,7 @@ gcloud beta workstations configs create $WS_NAME-config \
 
 > Note: this process will take ~1 min.
 
-#### workstation 
+### workstation 
 
 Finally, with cluster and configuration created, the last step is the actual workstation:
 
@@ -171,12 +178,12 @@ At this point you should be able to `start` and `launch` the newly created works
 open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
 ```
 
-#### updates
+## updates
 
-Whenever you build a new image (i.e. tag release), if the above created config will be automatically updated if it exists.
+Whenever you build a new image (i.e. tag a release in this repo), the above created config will be automatically updated if it exists.
 
-> If the workstation is already running you will have to stop and start it again for the new image to take effect.
+> Note: if the workstation is already running you will have to stop and start it again for the new image to take effect.
 
-# disclaimer
+## disclaimer
 
 This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
