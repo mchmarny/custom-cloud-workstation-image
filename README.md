@@ -201,6 +201,17 @@ Now, as you edit the included [Dockerfile](./Dockerfile) to add tools or change 
 
 > Note: if the workstation is already running you will have to stop and start it again for the new image to take effect.
 
+### user config options 
+
+The configuration you define in the image itself are global and will apply to each user of that image. Some settings like git or VS Code configuration will have to be done by the users. Still, there are way to make this process more consistent and easier to execute. 
+
+In the [assets/setup](assets/setup) folder, your will find a couple of these kinds of configurations: 
+
+* `git` - Sets git configuration based on user input (available in workstation via `/setup/git`)
+* `code` - Sets up common VS Code settings (available in workstation via `/setup/code`)
+
+Add your own to minimize the amount of steps users will need to take to make your workstation usable. Their settings will be persisted automatically by Cloud Workstations, even as you update the base image. Because of that aim for the setup scripts to be idempotent. 
+
 ## debug
 
 If you want to monitor or debug this process, start by navigating to the Cloud Build history tab and check on the status of your build. Both, `build` and `deploy` steps have to be green.
