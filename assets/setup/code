@@ -6,7 +6,11 @@ set -euo pipefail
 
 # === START CODE SETUP =====================================================
 
-cp /setup/profile/settings.json ~/.local/share/code-server/User/settings.json
+# code profile
+cp -rf /setup/profile/settings.json ~/.local/share/code-server/User/settings.json
+
+# code extensions
+cp -rf /setup/extensions/extensions.json /home/user/.local/share/code-server/extensions/extensions.json
 
 # === END CODE SETUP =======================================================
 
