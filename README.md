@@ -1,30 +1,31 @@
 # custom-cloud-workstation-image
 
-Custom Google Cloud Workstations image pipeline.
+Custom Google Cloud Workstations image pipeline with automatic image build and Cloud Workstations configuration update. Add your own tools in the included [Dockerfile](./Dockerfile) and create a regular git tag to trigger new image update on your workstation. 
 
 ## setup
 
-> Given this is a custom image build example, the assumption is you already know the basic. For brevity, these setup instructions will skip the details for common steps. Terraform setup is coming soon for more automated deployment process.
+Start by [forking this repo](https://github.com/mchmarny/custom-cloud-workstation-image/fork) and cloning it locally. Next, navigate into the new directory, and export the following environment variables with your own values: 
 
-Start by [forking this repo](https://github.com/mchmarny/custom-cloud-workstation-image/fork) and closing it locally. When done, export the following environment variables with your own values: 
+> For brevity, these setup will skip the details for common steps, the assumption is you already are familiar with Cloud Build builds and Cloud Workstation configuration. A Terraform setup is coming soon for more automated deployment process.
 
 ```shell
 # GCP project ID
 export PROJECT_ID="your-gcp-project-id"
 # GCP region where you want to run the scans
 export REGION="us-west1"
-# GitHub user is the org/username where you forked this repo 
+# GitHub user is the org or username where you forked this repo 
 export GH_USER="your-github-username"
 # Artifact Registry name where you want to publish the image
-# For example: us-docker.pkg.dev/$PROJECT_ID/ws-images
+# For example: us-west1-docker.pkg.dev/$PROJECT_ID/ws-images
 export AR_REPO="ws-images"
 # Cloud Workstations prefix
+# helpful when you want to create multiple workstations
 export WS_NAME="dev"
 ```
 
 ### repo 
 
-Create Artifact Registry: 
+Create Artifact Registry repository: 
 
 ```shell
 gcloud artifacts repositories create $AR_REPO \
@@ -59,6 +60,8 @@ To trigger an actual build of this image, first, update the [version](./version)
 git tag -s -m "version bump" $(cat ./version)
 git push origin $(cat ./version)
 ```
+
+> Alternatively, you can run `make tag` to automate the above steps. 
 
 ### cluster 
 
@@ -111,6 +114,8 @@ export RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.co
 
 At minimum, that service account has to have these roles: 
 
+> Complete list of rights included in each one these roles is available [here](https://cloud.google.com/iam/docs/understanding-roles) 
+
 ```shell
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$RUNNER_SA" \
@@ -141,6 +146,14 @@ export IMAGE=$(gcloud artifacts docker images list \
 echo $IMAGE
 ```
 
+The result of the above command should look something like this: 
+
+```shell
+us-west1-docker.pkg.dev/project/ws-images/ws-go-code@sha256:2d0f7ece95fe0ca83103602230f65d63c1950870bdd135c9b7c82256afc21d78
+```
+
+> Note, if the above command did not result in the URI of an image, navigate to the [debug](#debug) section to check on the status of your build process. 
+
 Finally, create the workstation configuration: 
 
 ```shell
@@ -162,7 +175,7 @@ gcloud beta workstations configs create $WS_NAME-config \
 
 ### workstation 
 
-Finally, with cluster and configuration created, the last step is the actual workstation:
+With the cluster and configuration created, the last step is the actual workstation:
 
 ```shell
 gcloud beta workstations create $WS_NAME-workstation \
@@ -180,9 +193,29 @@ open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
 
 ## updates
 
-Whenever you build a new image (i.e. tag a release in this repo), the above created config will be automatically updated if it exists.
+Now, as you edit the included [Dockerfile](./Dockerfile) to add tools or change versions, just tag new release (`make tag`), the above created Cloud Workstations configuration will be automatically updated after successful execution of the Cloud Build trigger.
 
 > Note: if the workstation is already running you will have to stop and start it again for the new image to take effect.
+
+## debug
+
+If you want to monitor or debug this process, start by navigating to the Cloud Build history tab and check on the status of your build. Both, `build` and `deploy` steps have to be green.
+
+```shell
+open https://console.cloud.google.com/cloud-build/builds;region=$REGION?project=$PROJECT_ID
+```
+
+Next, check whether the image is in the Artifact registry. You should see there a tag that equals to what was in [version](./version) during the last tag. 
+
+```shell
+open https://console.cloud.google.com/artifacts/docker/$PROJECT_ID/$REGION/$AR_REPO/ws-go-code?project=$PROJECT_ID
+```
+
+Finally, check the Configurations section of Cloud Workstations to see if the `config` was updated with the digest of the last built image that corresponds to the tag: 
+
+```shell
+open https://console.cloud.google.com/workstations/configurations?project=$PROJECT_ID
+```
 
 ## disclaimer
 
