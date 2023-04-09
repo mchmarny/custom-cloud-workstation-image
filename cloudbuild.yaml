@@ -25,14 +25,14 @@ steps:
     args:
     - -c
     - |-
-      EXISTS=$(gcloud beta workstations configs list \
+      has_config=$(gcloud beta workstations configs list \
         --project=$PROJECT_ID \
         --region=$LOCATION \
         --cluster=${_CLUSTER} \
         --filter="name:${_CONFIG}" \
         --format='value(NAME)')
-      echo "Updating config: $EXISTS with $(cat ./digest.txt)"
-      if [ $EXISTS == "${_CONFIG}" ]; then
+      echo "Updating config: $has_config with $(cat ./digest.txt)"
+      if [ $has_config == "${_CONFIG}" ]; then
         gcloud beta workstations configs update ${_CONFIG} \
             --project=$PROJECT_ID \
             --region=$LOCATION \
