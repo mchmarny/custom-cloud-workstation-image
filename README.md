@@ -20,9 +20,9 @@ export GH_USER="your-github-username"
 export AR_REPO="ws-images"
 ```
 
-# build
+### image
 
-Next, create a GitHub trigger in GCB using the [provided build configurations file](cloudbuild.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#build_trigger):
+To build a custom image for Cloud Workstations (CW) using the provided docker file, first, create a GitHub trigger in GCB using the [provided build configurations file](cloudbuild.yaml). More detail about the parameters used below [here](https://cloud.google.com/build/docs/automating-builds/create-manage-triggers#build_trigger):
 
 > Note, if you get `Repository mapping does not exist` error, follow the provided URL to connect that repo to your project.
 
@@ -38,7 +38,121 @@ gcloud beta builds triggers create github \
     --substitutions=_REPO=$AR_REPO,_IMAGE=go-code
 ```
 
-To trigger an actual build of this image, first, update the [version](./version) file to the next canonical version (e.g. `v0.1.10`), commit and push that change in git, and run `make tag`.
+To trigger an actual build of this image, first, update the [version](./version) file to the next canonical version, commit and push that change in git, and run `make tag`.
+
+### workstation 
+
+This section will overview the Cloud Workstation configuration to use the above created image: 
+
+#### cluster 
+
+To create a cluster: 
+
+```shell
+gcloud beta workstations clusters create dev-cluster \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --async
+```
+
+This process can take as much as 20 min. Use the `describe` command to check on its status:
+
+```shell
+gcloud beta workstations clusters describe dev-cluster \
+    --project=$PROJECT_ID \
+    --region=$REGION
+```
+
+The presence of `"reconciling": true` indicates that the cluster is still being provisioned. When complete, the response of the above command will look something like this: 
+
+```json
+{
+  "createTime": "2023-04-08T22:34:52.290190289Z",
+  "name": "projects/project/locations/us-west1/workstationClusters/ws-demo-cluster",
+  "network": "projects/project/global/networks/default",
+  "subnetwork": "projects/project/regions/us-west1/subnetworks/default",
+  "updateTime": "2023-04-08T22:49:16.878931635Z"
+}
+```
+
+#### config
+
+Once the cluster is configured and the above `describe` command returns confirmation with `network` information, you are ready to create workstation configuration. To do this you will need some information. 
+
+Start by getting the fully-qualified URI (with digest) of the image created by the above step:
+
+```shell
+export IMAGE=$(gcloud artifacts docker images list \
+    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
+    --limit 1 --format='value[separator="@"](IMAGE,DIGEST)')
+echo $IMAGE
+```
+
+Next, create a service account which will be used to run the workstation: 
+
+```shell
+gcloud iam service-accounts create dev-workstation-runner
+```
+
+Export that account: 
+
+```shell
+export WS_RUNNER_SA="dev-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
+```
+
+At minimum, that service account has to have two roles: 
+
+```shell
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$WS_RUNNER_SA" \
+    --role="roles/workstations.workstationCreator" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$WS_RUNNER_SA" \
+    --role="roles/workstations.operationViewer" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$WS_RUNNER_SA" \
+    --role="roles/artifactregistry.reader" \
+    --condition=None
+```
+
+Finally, create the workstation configuration: 
+
+```shell
+gcloud beta workstations configs create dev-config \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --cluster=dev-cluster \
+    --container-custom-image=$IMAGE \
+    --service-account=$WS_RUNNER_SA \
+    --machine-type=e2-standard-8 \
+    --pd-disk-type=pd-ssd \
+    --pd-disk-size=200 \
+    --idle-timeout=14400 \
+    --running-timeout=14400 \
+    --pool-size=2
+```
+
+> Note: this process will take ~1 min.
+
+#### workstation 
+
+Finally, with cluster and configuration created, the last step is the actual workstation:
+
+```shell
+gcloud beta workstations create dev-workstation \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --cluster=dev-cluster \
+    --config=dev-config
+```
+
+At this point you should be able to `start` and `launch` the newly created workstation
+
+```shell
+open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
+```
 
 # disclaimer
 
