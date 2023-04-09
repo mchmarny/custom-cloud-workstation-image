@@ -84,8 +84,16 @@ Start by getting the fully-qualified URI (with digest) of the image created by t
 ```shell
 export IMAGE=$(gcloud artifacts docker images list \
     us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
-    --limit 1 --format='value[separator="@"](IMAGE,DIGEST)')
+    --format='value[separator="@"](IMAGE,DIGEST)' \
+    --include-tags \
+    --filter="tags:$(cat ./version)")
 echo $IMAGE
+
+
+gcloud artifacts docker images list \
+    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
+    --format='value[separator="@"](IMAGE,DIGEST)' \
+    --filter="tags:v0.2.0"
 ```
 
 Next, create a service account which will be used to run the workstation: 
@@ -152,6 +160,26 @@ At this point you should be able to `start` and `launch` the newly created works
 
 ```shell
 open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
+```
+
+#### update
+
+Whenever you build a new image, you can just update the config. Start by capturing the new image digest:
+
+```shell
+export IMAGE=$(gcloud artifacts docker images list \
+    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
+    --format='value[separator="@"](IMAGE,DIGEST)' \
+    --include-tags \
+    --filter="tags:$(cat ./version)")
+```
+
+```shell
+gcloud beta workstations configs update dev-config \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --cluster=dev-cluster \
+    --container-custom-image=$IMAGE
 ```
 
 # disclaimer
