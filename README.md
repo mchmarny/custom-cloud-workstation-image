@@ -1,8 +1,10 @@
 # custom-cloud-workstation-image
 
-Custom Google Cloud Workstations image pipeline with automatic image build and Cloud Workstations configuration update. Add your own tools in the included [Dockerfile](./Dockerfile) and create a regular git tag to trigger new image update on your workstation. 
+Custom Google Cloud Workstations image pipeline with automatic image build and Cloud Workstations configuration update. 
 
-## setup
+Add your own tools (see [Dockerfile](./Dockerfile)), or provide your own configuration options for new users (see VS Code default settings and git configuration in [setup](assets/setup]). When ready, create a git tag with new version to trigger the release process which will build new image and update on your workstation with the new image. See [updates](#updates) for details. 
+
+## on time setup
 
 Start by [forking this repo](https://github.com/mchmarny/custom-cloud-workstation-image/fork) and cloning it locally. Next, navigate into the new directory, and export the following environment variables with your own values: 
 
@@ -193,7 +195,7 @@ open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
 
 ## updates
 
-Now, as you edit the included [Dockerfile](./Dockerfile) to add tools or change versions, just tag new release (`make tag`), the above created Cloud Workstations configuration will be automatically updated after successful execution of the Cloud Build trigger.
+Now, as you edit the included [Dockerfile](./Dockerfile) to add tools or change versions, or define new user configuration options in [setup](assets/setup), simply create a git tag (`make tag`) to trigger new release. New image will be built, and the above created Cloud Workstations configuration will be automatically updated.
 
 > Note: if the workstation is already running you will have to stop and start it again for the new image to take effect.
 
