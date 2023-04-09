@@ -1,6 +1,6 @@
 # custom-cloud-workstation-image
 
-Custom Cloud Workstations image
+Custom Google Cloud Workstations image pipeline.
 
 ## setup
 
@@ -181,6 +181,8 @@ gcloud beta workstations configs update dev-config \
     --cluster=dev-cluster \
     --container-custom-image=$IMAGE
 ```
+
+> If the workstation is already running you will have to stop and start it again for the new image to take effect.
 
 # disclaimer
 
