@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Code setup script.
+
+set -euo pipefail
+
+# === START CODE SETUP =====================================================
+
+cp /setup/profile/settings.json ~/.local/share/code-server/User/settings.json
+
+# === END CODE SETUP =======================================================
+
+
