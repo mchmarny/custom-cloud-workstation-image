@@ -7,7 +7,8 @@ FROM $GO_IMAGE as go
 FROM $BASE_IMAGE
 
 # workstation variables
-ARG CODE_VERSION=4.9.1
+# https://github.com/coder/code-server/releases
+ARG CODE_VERSION=4.10.0
 
 ENV CODE_VERSION=$CODE_VERSION
 
