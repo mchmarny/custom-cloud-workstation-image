@@ -1,10 +1,4 @@
-# Overview: Cloud Build build pipeline with Cloud Deploy release using git tag.
-
-substitutions:
-  _REPO: ws-images
-  _IMAGE: go-code
-  _POOL: big-pool
-
+# Overview: Cloud Build build pipeline using git tag.
 steps:
 
   - id: build
@@ -19,9 +13,6 @@ steps:
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${TAG_NAME}" \
         .
       docker image push --all-tags "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}"
-      docker image inspect "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${TAG_NAME}" \
-        --format '{{index .RepoDigests 0}}' > ./digest.txt
-      cat ./digest.txt
 
 images:
 - us-docker.pkg.dev/$PROJECT_ID/$_REPO/$_IMAGE:$TAG_NAME
@@ -30,8 +21,3 @@ options:
   # Verify generation of attestations and provenance metadata for this build.
   # Otherwise, GCB generates provenance for global builds only.
   requestedVerifyOption: VERIFIED
-  pool:
-    name: 'projects/$PROJECT_ID/locations/$LOCATION/workerPools/$_POOL'
-
-tags:
-- demo
