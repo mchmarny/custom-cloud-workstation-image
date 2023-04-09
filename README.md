@@ -18,6 +18,8 @@ export GH_USER="your-github-username"
 # Artifact Registry name where you want to publish the image
 # For example: us-docker.pkg.dev/$PROJECT_ID/ws-images
 export AR_REPO="ws-images"
+# Cloud Workstations prefix
+export WS_NAME="dev"
 ```
 
 ### image
@@ -35,7 +37,7 @@ gcloud beta builds triggers create github \
     --repo-owner=$GH_USER \
     --tag-pattern="v*" \
     --build-config=cloudbuild.yaml \
-    --substitutions=_REPO=$AR_REPO,_IMAGE=go-code
+    --substitutions=_REPO=$AR_REPO,_CLUSTER=$WS_NAME-cluster,_CONFIG=$WS_NAME-config
 ```
 
 To trigger an actual build of this image, first, update the [version](./version) file to the next canonical version, commit and push that change in git, and run `make tag`.
@@ -49,7 +51,7 @@ This section will overview the Cloud Workstation configuration to use the above 
 To create a cluster: 
 
 ```shell
-gcloud beta workstations clusters create dev-cluster \
+gcloud beta workstations clusters create $WS_NAME-cluster \
     --project=$PROJECT_ID \
     --region=$REGION \
     --async
@@ -58,7 +60,7 @@ gcloud beta workstations clusters create dev-cluster \
 This process can take as much as 20 min. Use the `describe` command to check on its status:
 
 ```shell
-gcloud beta workstations clusters describe dev-cluster \
+gcloud beta workstations clusters describe $WS_NAME-cluster \
     --project=$PROJECT_ID \
     --region=$REGION
 ```
@@ -83,29 +85,23 @@ Start by getting the fully-qualified URI (with digest) of the image created by t
 
 ```shell
 export IMAGE=$(gcloud artifacts docker images list \
-    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
+    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/ws-go-code \
     --format='value[separator="@"](IMAGE,DIGEST)' \
     --include-tags \
     --filter="tags:$(cat ./version)")
 echo $IMAGE
-
-
-gcloud artifacts docker images list \
-    us-docker.pkg.dev/$PROJECT_ID/$AR_REPO/go-code \
-    --format='value[separator="@"](IMAGE,DIGEST)' \
-    --filter="tags:v0.2.0"
 ```
 
 Next, create a service account which will be used to run the workstation: 
 
 ```shell
-gcloud iam service-accounts create dev-workstation-runner
+gcloud iam service-accounts create $WS_NAME-workstation-runner
 ```
 
 Export that account: 
 
 ```shell
-export WS_RUNNER_SA="dev-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
+export WS_RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
 ```
 
 At minimum, that service account has to have two roles: 
@@ -128,10 +124,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 Finally, create the workstation configuration: 
 
 ```shell
-gcloud beta workstations configs create dev-config \
+gcloud beta workstations configs create $WS_NAME-config \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --cluster=dev-cluster \
+    --cluster=$WS_NAME-cluster \
     --container-custom-image=$IMAGE \
     --service-account=$WS_RUNNER_SA \
     --machine-type=e2-standard-8 \
