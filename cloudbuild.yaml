@@ -2,7 +2,7 @@
 
 substitutions:
   _REPO: ws-images
-  _IMAGE: code-go-dev-code
+  _IMAGE: go-code
   _POOL: big-pool
 
 steps:
@@ -15,7 +15,6 @@ steps:
     - |-
       docker image build \
         --platform linux/amd64 \
-        -f code/Dockerfile \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${COMMIT_SHA}" \
         -t "us-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE}:${TAG_NAME}" \
         .

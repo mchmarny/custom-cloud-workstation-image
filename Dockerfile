@@ -34,12 +34,12 @@ COPY --from=golang:latest /usr/local/go/ /usr/local/go/
 RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
 # See: https://github.com/coder/code-server#getting-started
-RUN echo "Installing VS Code server 4.9.1" && \
+RUN echo "Installing VS Code" && \
     (curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.9.1)
 
 # Merge in files from the assets directory
 # See: https://source.corp.google.com/dev-con/workstation/base/Dockerfile
-COPY ./base/assets/. /
+COPY ./assets/. /
 
 # Ensure diff sha when only version is changed
 COPY ./version /version
