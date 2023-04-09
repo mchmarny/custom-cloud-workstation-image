@@ -31,7 +31,7 @@ steps:
         --cluster=${_CLUSTER} \
         --filter="name:${_CONFIG}" \
         --format='value(NAME)')
-      echo "Updating config: ${EXISTS} with $(cat ./digest.txt)"
+      echo "Updating config: $EXISTS with $(cat ./digest.txt)"
       if [ $EXISTS == "${_CONFIG}" ]; then
         gcloud beta workstations configs update ${_CONFIG} \
             --project=$PROJECT_ID \
