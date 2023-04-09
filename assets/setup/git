@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Do in here all the steps that are needed to setup 
+# the workstation after the initial launch.
+
+set -euo pipefail
+
+username=''
+email=''
+
+# === START USAGE AND PARAMS =============================================
+print_usage() {
+    cat << EOF
+usage: /setup/git -u <github-username> -e <email>
+EOF
+}
+
+# parse parameters
+while getopts 'u:e:' flag; do
+  case "${flag}" in
+    u) username="${OPTARG}" ;;
+    e) email="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+
+# check if all required parameters are set
+[ -z "$username" ] && echo "error: username (-u) not set" && print_usage && exit 1
+[ -z "$email" ] && echo "error: email (-e) not set" && print_usage && exit 1
+# === END USAGE AND PARAMS ================================================
+
+# === START GIT SETUP =====================================================
+echo "configuring git (username: $username, email: $email)"
+git config --global user.name $username
+git config --global user.email $email
+git config --global core.editor nano
+
+ssh-keygen -t ed25519 -C $USER_EMAIL
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub
+echo "copy the line above and add it to your GitHub account"
+read -p "press enter when done to test the new key"
+ssh -T git@github.com
+# === END GIT SETUP =======================================================
+
+
