@@ -1,4 +1,15 @@
-FROM ubuntu:18.04
+# image versions
+ARG BASE_IMAGE=ubuntu:22.04
+ARG GO_IMAGE=golang:1.20.3
+
+FROM $GO_IMAGE as go
+
+FROM $BASE_IMAGE
+
+# workstation variables
+ARG CODE_VERSION=4.9.1
+
+ENV CODE_VERSION=$CODE_VERSION
 
 RUN echo "Updating base image" && \
     apt-get -y update && \
@@ -27,15 +38,17 @@ RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
     apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 RUN apt-get update && apt-get install google-cloud-cli
 
-RUN echo "Cleanup after install" && \
-    apt-get clean
-
-COPY --from=golang:latest /usr/local/go/ /usr/local/go/
+COPY --from=go /usr/local/go/ /usr/local/go/
 RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
 # See: https://github.com/coder/code-server#getting-started
 RUN echo "Installing VS Code" && \
-    (curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.9.1)
+    (curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=$CODE_VERSION)
+
+RUN echo "Updating workstation" && \
+    apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get clean
 
 # Merge in files from the assets directory
 # See: https://source.corp.google.com/dev-con/workstation/base/Dockerfile
