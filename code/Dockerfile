@@ -10,8 +10,7 @@ RUN echo "Removing unecessary components" && \
 RUN echo "Updating what's left on base image" && \
     apt-get update && apt-get -y upgrade && apt-get -y clean
 
-RUN echo "Insrtall go" && \
-    --from=golang:latest /usr/local/go/ /usr/local/go/
+COPY --from=golang:latest /usr/local/go/ /usr/local/go/
 RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 
 # Ensure diff sha when only version is changed
