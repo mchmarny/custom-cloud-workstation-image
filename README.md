@@ -65,7 +65,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 > Depending on what you will do with this workstation, you may want to add additional roles. 
 
-### repo 
+### registry    
 
 Create Artifact Registry repository: 
 
