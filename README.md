@@ -1,10 +1,10 @@
 # custom-cloud-workstation-image
 
-Custom Google Cloud Workstations image pipeline with automatic image build and Cloud Workstations configuration update. 
+Cloud Workstations provides number of [pre-configured base images](https://cloud.google.com/workstations/docs/customize-container-images) that include most of the common tools. You can extend these base images, or you can crete a custom image that has the minimal configuration for your specific use-case, and nothing else. 
 
-Add your own tools (see [Dockerfile](./Dockerfile) for examples), or provide your own configuration options for new users (see [setup](assets/setup) for examples of VS Code default settings and git configuration). 
+This custom Cloud Workstations pipeline image creates an image optimized for [Go](https://go.dev/) development in [VS Code](https://github.com/microsoft/vscode), with automatic Cloud Workstations configuration update. You can add your own tools in [Dockerfile](./Dockerfile), or provide additional user-specific options for new users in [setup](assets/setup) for things like VS Code default settings and git configuration. 
 
-This pipeline will build new image and update your workstation with that image: 
+This pipeline includes new image build and workstation configuration update with that image: 
 
 * On new git (version) tag, see [updates](#updates)
 * On daily schedule, see [schedule](#schedule) 
@@ -274,25 +274,13 @@ curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
      "https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run"
 ```
 
-That means we can now set it up as a Cloud Schedule, to do that, we have to create a service account and grant the necessary role to execute the above created trigger: 
+That means we can now set it up as a Cloud Schedule, first, make sure the Cloud Build account has sufficient rights to execute the job:: 
+
 
 ```shell
-gcloud iam service-accounts create $WS_NAME-build-schedule-runner
-```
-
-Export that account: 
-
-```shell
-export SCHEDULE_SA="$WS_NAME-build-schedule-runner@$PROJECT_ID.iam.gserviceaccount.com"
-```
-
-Grant that service account role to execute Cloud Build trigger: 
-
-> Complete list of rights included in each one these roles is available [here](https://cloud.google.com/iam/docs/understanding-roles) 
-
-```shell
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$SCHEDULE_SA" \
+    --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
     --role="roles/cloudbuild.builds.editor" \
     --condition=None
 ```
@@ -305,8 +293,8 @@ gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
     --schedule='0 1 * * *' \
     --location=$REGION \
     --uri=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run \
-    --oauth-service-account-email=$SCHEDULE_SA \
-    --oauth-token-scope=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run
+    --oauth-service-account-email=$PROJECT_NUMBER-compute@developer.gserviceaccount.com \
+    --oauth-token-scope=https://www.googleapis.com/auth/cloud-platform
 ```
 
 Now everyday, at 1am UTC, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image. 
