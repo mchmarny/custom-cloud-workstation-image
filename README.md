@@ -56,10 +56,6 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$RUNNER_SA" \
     --role="roles/artifactregistry.reader" \
     --condition=None
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$RUNNER_SA" \
-    --role="roles/cloudbuild.builds.editor" \
-    --condition=None
 ```
 
 > Depending on what you will do with this workstation, you may want to add additional roles. 
@@ -85,7 +81,6 @@ gcloud beta builds triggers create github \
     --name=custom-cloud-workstation-image \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --service-account=projects/$PROJECT_ID/serviceAccounts/$RUNNER_SA \
     --repo-name=custom-cloud-workstation-image \
     --repo-owner=$GH_USER \
     --tag-pattern="v*" \
@@ -248,7 +243,6 @@ gcloud beta builds triggers create manual \
     --name=custom-cloud-workstation-image-schedule \
     --project=$PROJECT_ID \
     --region=$REGION \
-    --service-account=projects/$PROJECT_ID/serviceAccounts/$RUNNER_SA \
     --repo=https://github.com/$GH_USER/custom-cloud-workstation-image \
     --repo-type=GITHUB \
     --branch=main \
@@ -275,18 +269,42 @@ curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
      "https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run"
 ```
 
-That means we can now set it up as a Cloud Schedule 
+That means we can now set it up as a Cloud Schedule, to do that, we have to create a service account and grant the necessary role to execute the above created trigger: 
+
+```shell
+gcloud iam service-accounts create $WS_NAME-build-schedule-runner
+```
+
+Export that account: 
+
+```shell
+export SCHEDULE_SA="$WS_NAME-build-schedule-runner@$PROJECT_ID.iam.gserviceaccount.com"
+```
+
+Grant that service account role to execute Cloud Build trigger: 
+
+> Complete list of rights included in each one these roles is available [here](https://cloud.google.com/iam/docs/understanding-roles) 
+
+```shell
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SCHEDULE_SA" \
+    --role="roles/cloudbuild.builds.editor" \
+    --condition=None
+```
+
+Finally, create the Cloud Scheduler job:
 
 ```shell
 gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
+    --http-method POST \
     --schedule='0 1 * * *' \
     --location=$REGION \
     --uri=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run \
-    --oauth-service-account-email=$RUNNER_SA \
+    --oauth-service-account-email=$SCHEDULE_SA \
     --oauth-token-scope=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run
 ```
 
-Now everyday, at 1am GMT, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image. 
+Now everyday, at 1am UTC, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image. 
 
 ## disclaimer
 
