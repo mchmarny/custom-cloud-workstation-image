@@ -27,6 +27,43 @@ export AR_REPO="ws-images"
 export WS_NAME="dev"
 ```
 
+Next, create a service account which will be used to run the workstation: 
+
+```shell
+gcloud iam service-accounts create $WS_NAME-workstation-runner
+```
+
+Export that account: 
+
+```shell
+export RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
+```
+
+At minimum, that service account has to have these roles: 
+
+> Complete list of rights included in each one these roles is available [here](https://cloud.google.com/iam/docs/understanding-roles) 
+
+```shell
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$RUNNER_SA" \
+    --role="roles/workstations.workstationCreator" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$RUNNER_SA" \
+    --role="roles/workstations.operationViewer" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$RUNNER_SA" \
+    --role="roles/artifactregistry.reader" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$RUNNER_SA" \
+    --role="roles/cloudbuild.builds.editor" \
+    --condition=None
+```
+
+> Depending on what you will do with this workstation, you may want to add additional roles. 
+
 ### repo 
 
 Create Artifact Registry repository: 
@@ -48,6 +85,7 @@ gcloud beta builds triggers create github \
     --name=custom-cloud-workstation-image \
     --project=$PROJECT_ID \
     --region=$REGION \
+    --service-account=projects/$PROJECT_ID/serviceAccounts/$RUNNER_SA \
     --repo-name=custom-cloud-workstation-image \
     --repo-owner=$GH_USER \
     --tag-pattern="v*" \
@@ -102,39 +140,6 @@ The presence of `"reconciling": true` indicates that the cluster **is still bein
 ### config
 
 Once the cluster is configured and the above `describe` command returns confirmation with `network` information, you are ready to create workstation configuration. To do this you will need some information. 
-
-Start by creating a service account which will be used to run the workstation: 
-
-```shell
-gcloud iam service-accounts create $WS_NAME-workstation-runner
-```
-
-Export that account: 
-
-```shell
-export RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
-```
-
-At minimum, that service account has to have these roles: 
-
-> Complete list of rights included in each one these roles is available [here](https://cloud.google.com/iam/docs/understanding-roles) 
-
-```shell
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$RUNNER_SA" \
-    --role="roles/workstations.workstationCreator" \
-    --condition=None
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$RUNNER_SA" \
-    --role="roles/workstations.operationViewer" \
-    --condition=None
-gcloud projects add-iam-policy-binding $PROJECT_ID \
-    --member="serviceAccount:$RUNNER_SA" \
-    --role="roles/artifactregistry.reader" \
-    --condition=None
-```
-
-> Depending on what you will do with this workstation, you may want to add additional roles. 
 
 Next, get the fully-qualified URI (with digest) of the image created by the above step:
 
@@ -243,6 +248,7 @@ gcloud beta builds triggers create manual \
     --name=custom-cloud-workstation-image-schedule \
     --project=$PROJECT_ID \
     --region=$REGION \
+    --service-account=projects/$PROJECT_ID/serviceAccounts/$RUNNER_SA \
     --repo=https://github.com/$GH_USER/custom-cloud-workstation-image \
     --repo-type=GITHUB \
     --branch=main \
@@ -250,7 +256,37 @@ gcloud beta builds triggers create manual \
     --substitutions=_REPO=$AR_REPO,_CLUSTER=$WS_NAME-cluster,_CONFIG=$WS_NAME-config
 ```
 
-> WIP: work on this section is still cont complete. In the mean time, bump up the version in [version](./version) file and create new tag to trigger new build. 
+Next, capture the trigger ID: 
+
+```shell
+export TRIGGER_ID=$(gcloud beta builds triggers describe \
+    custom-cloud-workstation-image-schedule \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --format='value(id)')
+```
+
+You can run this trigger now manually, by invoking from `curl`. 
+
+> This assumes that you have the necessary role to execute the build.
+
+```shell
+curl -X POST -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+     "https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run"
+```
+
+That means we can now set it up as a Cloud Schedule 
+
+```shell
+gcloud scheduler jobs create http custom-cloud-workstation-image-schedule \
+    --schedule='0 1 * * *' \
+    --location=$REGION \
+    --uri=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run \
+    --oauth-service-account-email=$RUNNER_SA \
+    --oauth-token-scope=https://cloudbuild.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/triggers/$TRIGGER_ID:run
+```
+
+Now everyday, at 1am GMT, the image will be rebuilt and the Cloud Workstation configuration updated with the latest image. 
 
 ## disclaimer
 
