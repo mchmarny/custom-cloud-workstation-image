@@ -234,6 +234,14 @@ Finally, check the Configurations section of Cloud Workstations to see if the `c
 open https://console.cloud.google.com/workstations/configurations?project=$PROJECT_ID
 ```
 
+## schedule 
+
+Vulnerabilities found in the image created by this pipeline will not not have a fix when you initially create this pipeline. If necessary, update the versions defined in the Dockerfile to the one where that vulnerability is fixed. To benefit however from upstream updates, you will have to setup a cron job that will rebuild the image on schedule.
+
+To start, define manual trigger: 
+
+> WIP: work on this section is still cont complete. In the mean time, bump up the version in [version](./version) file and create new tag to trigger new build. 
+
 ## disclaimer
 
 This is my personal project and it does not represent my employer. While I do my best to ensure that everything works, I take no responsibility for issues caused by this code.
