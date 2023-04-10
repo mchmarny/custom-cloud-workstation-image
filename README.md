@@ -145,8 +145,7 @@ Next, get the fully-qualified URI (with digest) of the image created by the abov
 export IMAGE=$(gcloud artifacts docker images list \
     $REGION-docker.pkg.dev/$PROJECT_ID/$AR_REPO/ws-go-code \
     --format='value[separator="@"](IMAGE,DIGEST)' \
-    --include-tags \
-    --filter="tags:$(cat ./version)")
+    --include-tags --filter="tags:$(cat ./version)")
 echo $IMAGE
 ```
 

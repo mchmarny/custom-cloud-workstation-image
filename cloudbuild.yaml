@@ -7,11 +7,8 @@ steps:
     args:
     - -c
     - |-
-      docker image build \
-        --platform linux/amd64 \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${COMMIT_SHA}" \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${TAG_NAME}" \
-        .
+      docker image build --platform linux/amd64 \
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${TAG_NAME}" .
       docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
       docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${TAG_NAME}" \
         --format '{{index .RepoDigests 0}}' > ./digest.txt
