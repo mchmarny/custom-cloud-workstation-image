@@ -2,7 +2,7 @@
 
 Custom Google Cloud Workstations image pipeline with automatic image build and Cloud Workstations configuration update. 
 
-Add your own tools (see [Dockerfile](./Dockerfile) for examples), or provide your own configuration options for new users (see [setup](assets/setup] for examples of VS Code default settings and git configuration). 
+Add your own tools (see [Dockerfile](./Dockerfile) for examples), or provide your own configuration options for new users (see [setup](assets/setup) for examples of VS Code default settings and git configuration). 
 
 This pipeline will build new image and update your workstation with that image: 
 
