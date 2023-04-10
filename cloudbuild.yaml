@@ -8,9 +8,9 @@ steps:
     - -c
     - |-
       docker image build --platform linux/amd64 \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${TAG_NAME}" .
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)" .
       docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
-      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:${TAG_NAME}" \
+      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)" \
         --format '{{index .RepoDigests 0}}' > ./digest.txt
       cat ./digest.txt
 
@@ -36,9 +36,6 @@ steps:
             --cluster=${_CLUSTER} \
             --container-custom-image=$(cat ./digest.txt)
       fi
-      
-images:
-- ${LOCATION}-docker.pkg.dev/$PROJECT_ID/$_REPO/ws-go-code:$TAG_NAME
 
 options:
   # Verify generation of attestations and provenance metadata for this build.

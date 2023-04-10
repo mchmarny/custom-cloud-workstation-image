@@ -34,8 +34,7 @@ Create Artifact Registry repository:
 ```shell
 gcloud artifacts repositories create $AR_REPO \
     --location=$REGION \
-    --repository-format=docker \
-    --immutable-tags
+    --repository-format=docker
 ```
 
 ### trigger
@@ -238,6 +237,18 @@ open https://console.cloud.google.com/workstations/configurations?project=$PROJE
 Vulnerabilities found in the image created by this pipeline will not not have a fix when you initially create this pipeline. If necessary, update the versions defined in the Dockerfile to the one where that vulnerability is fixed. To benefit however from upstream updates, you will have to setup a cron job that will rebuild the image on schedule.
 
 To start, define manual trigger: 
+
+```shell
+gcloud beta builds triggers create manual \
+    --name=custom-cloud-workstation-image-schedule \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --repo=https://github.com/$GH_USER/custom-cloud-workstation-image \
+    --repo-type=GITHUB \
+    --branch=main \
+    --build-config=cloudbuild.yaml \
+    --substitutions=_REPO=$AR_REPO,_CLUSTER=$WS_NAME-cluster,_CONFIG=$WS_NAME-config
+```
 
 > WIP: work on this section is still cont complete. In the mean time, bump up the version in [version](./version) file and create new tag to trigger new build. 
 
