@@ -1,5 +1,5 @@
 VERSION     ?=$(shell cat ./version)
-REGISTRY    ?=us-docker.pkg.dev/cloudy-demos/ws-images
+REGISTRY    ?=us-west1-docker.pkg.dev/cloudy-demos/ws-images
 IMAGE       ?=go-code
 
 all: help
@@ -18,6 +18,17 @@ image: ## Build base container image
 		.
 	docker image push $(REGISTRY)/$(IMAGE):$(VERSION)
 	docker image push $(REGISTRY)/$(IMAGE):latest
+
+.PHONY: mini
+mini: ## Build mini base container image
+	docker image build \
+		--platform linux/amd64 \
+		-f Dockerfile.alpine \
+		-t $(REGISTRY)/$(IMAGE)-mini:$(VERSION) \
+		-t $(REGISTRY)/$(IMAGE)-mini:latest \
+		.
+	docker image push $(REGISTRY)/$(IMAGE)-mini:$(VERSION)
+	docker image push $(REGISTRY)/$(IMAGE)-mini:latest
 
 .PHONY: run
 run: ## Run previously built base container image
