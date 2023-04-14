@@ -27,8 +27,8 @@ RUN apt-get -y install openssh-client openssh-server && \
     rm -rf /etc/ssh/ssh_host_*  # remove auto-created host keys
 
 # Install dev tools
-RUN apt-get -y install build-essential wget git curl jq nano \
-    gzip unzip
+RUN apt-get -y install build-essential curl git gpa gzip jq \
+    nano seahorse unzip wget
 
 # Install sdk
 RUN apt-get -y install apt-transport-https ca-certificates gnupg
