@@ -47,6 +47,10 @@ RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile
 # https://github.com/coder/code-server#getting-started
 RUN curl -fsSL https://code-server.dev/install.sh | \
     sh -s -- --version=$CODE_VERSION
+    
+# Install golangci-lint
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+    sh -s -- -b $(go env GOPATH)/bin 
 
 # One more update the vs.code isntalled packages
 RUN apt-get -y update && \
