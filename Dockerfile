@@ -28,7 +28,7 @@ RUN apt-get -y install openssh-client openssh-server && \
 
 # Install dev tools
 RUN apt-get -y install build-essential curl git gpa gzip jq \
-    nano seahorse unzip wget
+    nano seahorse yamllint unzip wget
 
 # Install sdk
 RUN apt-get -y install apt-transport-https ca-certificates gnupg
