@@ -1,6 +1,6 @@
 # image versions
-ARG BASE_IMAGE=ubuntu:22.04
-ARG GO_IMAGE=golang:1.20.4
+ARG BASE_IMAGE=ubuntu:23.04
+ARG GO_IMAGE=golang:1.20.5
 
 FROM $GO_IMAGE as go
 
