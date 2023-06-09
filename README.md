@@ -30,6 +30,8 @@ export AR_REPO="ws-images"
 # Cloud Workstations prefix
 # helpful when you want to create multiple workstations
 export WS_NAME="dev"
+# Project Number 
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 ```
 
 Next, create a service account which will be used to run the workstation: 
@@ -38,10 +40,11 @@ Next, create a service account which will be used to run the workstation:
 gcloud iam service-accounts create $WS_NAME-workstation-runner
 ```
 
-Export that account: 
+Export accounts: 
 
 ```shell
 export RUNNER_SA="$WS_NAME-workstation-runner@$PROJECT_ID.iam.gserviceaccount.com"
+export BUILDER_SA="$PROJECT_NUMBER@cloudbuild.gserviceaccount.com"
 ```
 
 At minimum, that service account has to have these roles: 
@@ -60,6 +63,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$RUNNER_SA" \
     --role="roles/artifactregistry.reader" \
+    --condition=None
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$BUILDER_SA" \
+    --role="roles/workstations.admin" \
     --condition=None
 ```
 
@@ -278,7 +285,6 @@ That means we can now set it up as a Cloud Schedule, first, make sure the Cloud 
 
 
 ```shell
-export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com" \
     --role="roles/cloudbuild.builds.editor" \
