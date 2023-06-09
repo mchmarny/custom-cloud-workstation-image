@@ -7,7 +7,7 @@ steps:
     args:
     - -c
     - |-
-      echo date +%s > ./epoch
+      echo "$(date +%s)" > ./epoch
       docker image build --platform linux/amd64 \
         -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)-$(cat ./epoch)" .
       docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
