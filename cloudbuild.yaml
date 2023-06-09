@@ -10,9 +10,6 @@ steps:
       docker image build --platform linux/amd64 \
         -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)" .
       docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
-      docker image inspect "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)" \
-        --format '{{index .RepoDigests 0}}' > ./digest.txt
-      cat ./digest.txt
 
   - id: deploy
     waitFor:
@@ -22,20 +19,11 @@ steps:
     args:
     - -c
     - |-
-      has_config=$(gcloud beta workstations configs list \
-        --project=$PROJECT_ID \
-        --region=$LOCATION \
-        --cluster=${_CLUSTER} \
-        --filter="name:${_CONFIG}" \
-        --format='value(NAME)')
-      echo "Updating config: $has_config with $(cat ./digest.txt)"
-      if [ $has_config == "${_CONFIG}" ]; then
-        gcloud beta workstations configs update ${_CONFIG} \
+      gcloud beta workstations configs update ${_CONFIG} \
             --project=$PROJECT_ID \
             --region=$LOCATION \
             --cluster=${_CLUSTER} \
-            --container-custom-image=$(cat ./digest.txt)
-      fi
+            --container-custom-image="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)"
 
 options:
   # Verify generation of attestations and provenance metadata for this build.
