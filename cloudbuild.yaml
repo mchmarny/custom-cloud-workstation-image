@@ -7,8 +7,9 @@ steps:
     args:
     - -c
     - |-
+      echo date +%s > ./epoch
       docker image build --platform linux/amd64 \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)" .
+        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)-$(cat ./epoch)" .
       docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
 
   - id: deploy
@@ -20,10 +21,10 @@ steps:
     - -c
     - |-
       gcloud beta workstations configs update ${_CONFIG} \
-            --project=$PROJECT_ID \
-            --region=$LOCATION \
-            --cluster=${_CLUSTER} \
-            --container-custom-image="${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)"
+            --project $PROJECT_ID \
+            --region $LOCATION \
+            --cluster ${_CLUSTER} \
+            --container-custom-image "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)-$(cat ./epoch)"
 
 options:
   # Verify generation of attestations and provenance metadata for this build.
