@@ -1,0 +1,126 @@
+# =============================================================================
+# Image versions
+# =============================================================================
+ARG BASE_IMAGE=ubuntu:24.04
+ARG GO_IMAGE=golang:1.25.3
+
+FROM $GO_IMAGE AS go
+
+FROM $BASE_IMAGE
+
+# =============================================================================
+# Build arguments and environment variables
+# =============================================================================
+# https://github.com/coder/code-server/releases
+ARG CODE_VERSION=4.105.1
+ENV CODE_VERSION=$CODE_VERSION
+
+# =============================================================================
+# System updates and base packages
+# =============================================================================
+# Update base image
+RUN apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Python installation
+# =============================================================================
+RUN apt-get update && \
+    apt-get -y install python3-pip python3-dev && \
+    cd /usr/local/bin && \
+    ln -s /usr/bin/python3 python && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# OpenSSH installation
+# =============================================================================
+RUN apt-get update && \
+    apt-get -y install openssh-client openssh-server && \
+    rm -rf /etc/ssh/ssh_host_* && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Development tools
+# =============================================================================
+RUN apt-get update && \
+    apt-get -y install \
+        build-essential \
+        curl \
+        git \
+        gpa \
+        gzip \
+        jq \
+        nano \
+        seahorse \
+        sudo \
+        yamllint \
+        unzip \
+        wget && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Google Cloud SDK
+# =============================================================================
+# Using modern keyring approach (apt-key is deprecated)
+RUN apt-get update && \
+    apt-get -y install apt-transport-https ca-certificates gnupg curl && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+        gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] \
+        https://packages.cloud.google.com/apt cloud-sdk main" | \
+        tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
+    apt-get update && \
+    apt-get install -y google-cloud-cli && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Go programming language
+# =============================================================================
+COPY --from=go /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}" \
+    GOPATH="/root/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
+
+# =============================================================================
+# VS Code Server
+# =============================================================================
+# https://github.com/coder/code-server#getting-started
+RUN curl -fsSL https://code-server.dev/install.sh | \
+    sh -s -- --version=$CODE_VERSION && \
+    mkdir -p /etc/code-server /home/user/.local/share/code-server
+
+# =============================================================================
+# Go development tools
+# =============================================================================
+# golangci-lint for Go linting
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+    sh -s -- -b /usr/local/bin
+
+# =============================================================================
+# Final system update
+# =============================================================================
+RUN apt-get update && \
+    apt-get -y upgrade && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# =============================================================================
+# Copy configuration files
+# =============================================================================
+# Merge in files from the assets directory
+COPY ./assets/. /
+
+# Make startup scripts executable
+RUN chmod +x /usr/bin/workstation-startup.sh && \
+    chmod +x /etc/workstation-startup.d/*.sh
+
+# =============================================================================
+# Container configuration
+# =============================================================================
+ENTRYPOINT ["/google/scripts/entrypoint.sh"]

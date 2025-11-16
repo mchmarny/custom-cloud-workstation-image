@@ -1,32 +1,60 @@
-# Overview: Cloud Build build pipeline using git tag.
+substitutions:
+  _REPO: "ws-images"
+  _CLUSTER: "ws-cluster"
+  _CONFIG: "ws-config"
+  _IMAGE_NAME: "ws-image"
+  _REGION: "us-west1"
+  _DOCKERFILE: "images/ubuntu-go-code.docker"
+
+# Cloud Build pipeline for building and deploying custom workstation image
 steps:
 
+  # Build and push Docker image with multiple tags
   - id: build
     name: gcr.io/cloud-builders/docker
     entrypoint: /bin/bash
     args:
     - -c
     - |-
-      echo "$(date +%s)" > ./epoch
-      docker image build --platform linux/amd64 \
-        -t "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)-$(cat ./epoch)" .
-      docker image push --all-tags "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code"
+      IMAGE_BASE="${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE_NAME}"
+      
+      echo "Building image: $${IMAGE_BASE}"
+      
+      # Build with multiple tags (only add SHORT_SHA if it exists)
+      docker image build \
+        --platform linux/amd64 \
+        --file "${_DOCKERFILE}" \
+        --tag "$${IMAGE_BASE}:${BUILD_ID}" \
+        --tag "$${IMAGE_BASE}:latest" \
+        .
+      
+      echo "Pushing image: $${IMAGE_BASE}"
+      docker image push --all-tags "$${IMAGE_BASE}"
 
+  # Update Cloud Workstations configuration with new image
   - id: deploy
-    waitFor:
-    - build
     name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: /bin/bash
     args:
     - -c
     - |-
-      gcloud beta workstations configs update ${_CONFIG} \
-            --project $PROJECT_ID \
-            --region $LOCATION \
-            --cluster ${_CLUSTER} \
-            --container-custom-image "${LOCATION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ws-go-code:$(cat ./version)-$(cat ./epoch)"
+      IMAGE_BASE="${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_IMAGE_NAME}"
+      
+      echo "Updating workstation config ${_CONFIG} with image $${IMAGE_BASE}:${BUILD_ID}"
+      
+      gcloud workstations configs update ${_CONFIG} \
+        --project=${PROJECT_ID} \
+        --region=${_REGION} \
+        --cluster=${_CLUSTER} \
+        --container-custom-image="$${IMAGE_BASE}:${BUILD_ID}"
+      
+      echo "Workstation configuration updated successfully"
 
 options:
-  # Verify generation of attestations and provenance metadata for this build.
-  # Otherwise, GCB generates provenance for global builds only.
+  # Use compute with more resources for faster builds
+  machineType: E2_HIGHCPU_8
+  
+  # Verify generation of attestations and provenance metadata
   requestedVerifyOption: VERIFIED
+
+timeout: 1800s  # 30 minutes

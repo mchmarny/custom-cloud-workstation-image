@@ -1,57 +1,81 @@
 {
-    "workbench.startupEditor": "newUntitledFile",
-    "go.formatTool": "goimports",
+    "workbench.startupEditor": "none",
     "git.enableSmartCommit": true,
     "git.confirmSync": false,
-    "editor.minimap.enabled": false,
+    "redhat.telemetry.enabled": true,
+    "explorer.confirmDragAndDrop": false,
     "explorer.confirmDelete": false,
     "cSpell.userWords": [
-        "commandline",
-        "Grafeas",
-        "Kaniko",
-        "kube",
-        "KUBECONFIG",
-        "kubectl",
-        "Kubernetes",
-        "prefs",
-        "unmarshalling",
-        "upsert",
-        "Vulns"
+        "bringup",
+        "Chmarny",
+        "coredns",
+        "jumpbox",
+        "kubeconfig",
+        "KUBEME",
+        "retryable",
+        "Runai",
+        "subpipeline",
+        "tolerations",
+        "uncompiled",
+        "uncordon",
+        "uncordoned",
+        "upgrader"
     ],
-    "editor.wordWrap": "on",
-    "explorer.confirmDragAndDrop": false,
-    "go.useLanguageServer": true,
-    "git.followTagsWhenSync": true,
-    "editor.suggestSelection": "first",
-    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "security.workspace.trust.untrustedFiles": "open",
+    "terraform.validation.enableEnhancedValidation": false,
+    "editor.minimap.autohide": "mouseover",
+    "editor.minimap.enabled": false,
+    "git.openRepositoryInParentFolders": "never",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "github.copilot.editor.enableAutoCompletions": true,
     "git.ignoreRebaseWarning": true,
     "go.toolsManagement.autoUpdate": true,
-    "docker.showStartPage": false,
-    "terminal.integrated.shell.osx": "/bin/zsh",
-    "terminal.integrated.fontSize": 16,
-    "redhat.telemetry.enabled": false,
-    "workbench.editor.untitled.hint": "hidden",
-    "security.workspace.trust.untrustedFiles": "open",
-    "editor.inlineSuggest.enabled": true,
-    "diffEditor.ignoreTrimWhitespace": false,
-    "cSpell.language": "en,en-US",
-    "git.autofetch": true,
-    "makefile.extensionOutputFolder": "",
-    "workbench.iconTheme": "Monokai Classic Monochrome Icons",
-    "telemetry.telemetryLevel": "off",
-    "workbench.colorCustomizations": {
-        "statusBar.background" : "#333",
-        "statusBar.noFolderBackground" : "#333",
-        "statusBar.debuggingBackground": "#333"
+    "vs-kubernetes": {
+        "vs-kubernetes.crd-code-completion": "disabled",
+        "vs-kubernetes.ignore-recommendations": true
     },
-    "workbench.colorTheme": "Monokai",
-    "cloudcode.updateChannel": "Insiders",
+    "yaml.customTags": [
+        "!reference sequence"
+    ],
+    "git.replaceTagsWhenPull": true,
+    "window.zoomLevel": 1,
+    "makefile.configureOnOpen": true,
+    "github.copilot.nextEditSuggestions.enabled": false,
+    "docker.extension.enableComposeLanguageServer": false,
     "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "keep",
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.defaultColorDecorators": "never",
+        "editor.quickSuggestions": {
+            "strings": true,
+            "other": true,
+            "comments": false
+        }
+    },
+    "chat.mcp.autostart": "newAndOutdated",
+    "docker.extension.dockerEngineAvailabilityPrompt": false,
+    "chat.editing.confirmEditRequestRemoval": false,
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        },
         "editor.defaultFormatter": "redhat.vscode-yaml"
     },
-    "workbench.editor.enablePreview": false,
-    "cSpell.autoFormatConfigFile": true,
-    "cSpell.blockCheckingWhenAverageChunkSizeGreaterThan": 200,
-    "go.autocompleteUnimportedPackages": true,
-    "window.zoomLevel": 2
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "files.associations": {
+        ".trivyignore": "ignore"
+    },
+    "chat.agent.maxRequests": 35,
+    "chat.instructionsFilesLocations": {
+        ".github/copilot-instructions.md": true
+    }
 }
