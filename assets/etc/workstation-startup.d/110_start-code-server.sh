@@ -9,7 +9,15 @@ echo "Starting 110_start-code-server.sh"
 set -e
 
 echo "Starting code-server on port 80"
-runuser user -c "code-server --auth=none --port=80 --host=0.0.0.0" &
+# Enable GitHub authentication and profile sync
+runuser user -c "code-server \
+    --auth=none \
+    --port=80 \
+    --host=0.0.0.0 \
+    --disable-telemetry \
+    --disable-update-check \
+    --extensions-dir=/home/user/.local/share/code-server/extensions \
+    --user-data-dir=/home/user/.local/share/code-server" &
 
 echo "Waiting for code-server to be ready"
 timeout=60

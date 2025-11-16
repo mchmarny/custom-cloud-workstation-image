@@ -92,7 +92,8 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 # =============================================================================
 # https://github.com/coder/code-server#getting-started
 RUN curl -fsSL https://code-server.dev/install.sh | \
-    sh -s -- --version=$CODE_VERSION
+    sh -s -- --version=$CODE_VERSION && \
+    mkdir -p /etc/code-server /home/user/.local/share/code-server
 
 # =============================================================================
 # Go development tools

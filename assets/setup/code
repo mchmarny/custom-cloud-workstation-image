@@ -6,10 +6,12 @@ set -euo pipefail
 
 # === START CODE SETUP =====================================================
 
-# code profile
+# code profile - create directory if it doesn't exist
+mkdir -p ~/.local/share/code-server/User
 cp -rf /setup/profile/settings.json ~/.local/share/code-server/User/settings.json
 
-echo "Close this tab and re-launch workstation for these changes to take effect."
+echo "VS Code settings have been configured."
+echo "Close this tab and re-launch workstation for changes to take effect."
 
 # === END CODE SETUP =======================================================
 

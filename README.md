@@ -184,6 +184,63 @@ You can now start and launch your workstation:
 open https://console.cloud.google.com/workstations/list?project=$PROJECT_ID
 ```
 
+## user customization
+
+The workstation image includes setup scripts in `/setup/` to help configure your personal development environment:
+
+### git configuration
+
+To configure Git with your GitHub credentials and set up SSH keys:
+
+```shell
+/setup/git -u <github-username> -e <email>
+```
+
+This script will:
+- Configure Git with your username and email
+- Set nano as the default Git editor
+- Generate an ED25519 SSH key
+- Display your public key for adding to GitHub
+- Test the SSH connection to GitHub
+
+**Example:**
+```shell
+/setup/git -u johndoe -e john@example.com
+```
+
+### vs code settings
+
+To apply pre-configured VS Code settings optimized for Go development:
+
+```shell
+/setup/code
+```
+
+This script will:
+- Copy default VS Code settings to your user profile
+- Configure editor preferences (minimap, git, YAML formatting, etc.)
+- Set up GitHub Copilot settings (if you have access)
+- Configure Go language tooling
+
+The settings include:
+- Smart Git commits and sync
+- Disabled minimap (can be re-enabled)
+- YAML formatting with 2-space indentation
+- Docker and Kubernetes development helpers
+- Custom spell-check dictionary
+
+**Note:** After running either setup script, close and re-launch your workstation for all changes to take effect.
+
+### custom settings
+
+To customize the default settings:
+
+1. Edit `/setup/profile/settings.json` in the repository before building your image
+2. Rebuild and deploy the image using the Cloud Build pipeline
+3. Run `/setup/code` in your workstation to apply the new settings
+
+Alternatively, you can manually edit `~/.local/share/code-server/User/settings.json` directly in your workstation for immediate changes (these will persist on the workstation's persistent disk).
+
 ## updates
 
 To update your custom image, simply submit a new build. The Cloud Build pipeline will automatically update the workstation configuration with the new image.

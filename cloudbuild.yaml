@@ -4,7 +4,7 @@ substitutions:
   _CONFIG: "ws-config"
   _IMAGE_NAME: "ws-image"
   _REGION: "us-west1"
-  _DOCKERFILE: "images/wolfi-go-code.docker"
+  _DOCKERFILE: "images/ubuntu-go-code.docker"
 
 # Cloud Build pipeline for building and deploying custom workstation image
 steps:

@@ -33,18 +33,52 @@ done
 
 # === START GIT SETUP =====================================================
 
-echo "configuring git (username: $username, email: $email)"
-git config --global user.name $username
-git config --global user.email $email
+echo "Configuring git (username: $username, email: $email)"
+git config --global user.name "$username"
+git config --global user.email "$email"
 git config --global core.editor nano
 
-ssh-keygen -t ed25519 -C $username
+# Check if SSH key already exists
+if [ -f ~/.ssh/id_ed25519 ]; then
+    echo "SSH key already exists at ~/.ssh/id_ed25519"
+    read -p "Do you want to overwrite it? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Skipping SSH key generation. Displaying existing public key:"
+        cat ~/.ssh/id_ed25519.pub
+        exit 0
+    fi
+fi
+
+# Generate SSH key
+echo "Generating SSH key..."
+ssh-keygen -t ed25519 -C "$email" -f ~/.ssh/id_ed25519 -N ""
+
+# Start ssh-agent and add key
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_ed25519
+
+echo ""
+echo "=========================================="
+echo "Your SSH public key:"
+echo "=========================================="
 cat ~/.ssh/id_ed25519.pub
-echo "copy the line above and add it to your GitHub account"
-read -p "press enter when done to test the new key"
-ssh -T git@github.com
+echo "=========================================="
+echo ""
+echo "Copy the key above and add it to your GitHub account:"
+echo "https://github.com/settings/ssh/new"
+echo ""
+read -p "Press Enter when done to test the connection..."
+
+# Test SSH connection to GitHub (will fail initially but shows fingerprint)
+echo ""
+echo "Testing SSH connection to GitHub..."
+if ssh -T git@github.com 2>&1 | grep -q "successfully authenticated"; then
+    echo "✓ SSH connection successful!"
+else
+    echo "Note: If you see 'Permission denied', make sure you added the key to GitHub."
+    echo "If you see 'Hi <username>!', your connection is working correctly."
+fi
 
 # === END GIT SETUP =======================================================
 
