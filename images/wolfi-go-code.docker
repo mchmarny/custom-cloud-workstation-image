@@ -1,0 +1,117 @@
+# =============================================================================
+# Image versions
+# =============================================================================
+ARG BASE_IMAGE=cgr.dev/chainguard/wolfi-base:latest
+ARG GO_IMAGE=golang:1.25.3
+
+FROM $GO_IMAGE AS go
+
+FROM $BASE_IMAGE
+
+LABEL org.opencontainers.image.source="https://github.com/mchmarny/custom-cloud-workstation-image" \
+      org.opencontainers.image.description="Custom image pipeline for Google Cloud Workstations" \
+      org.opencontainers.image.vendor="mchmarny" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.title="custom-cloud-workstation-image"
+
+# =============================================================================
+# Build arguments and environment variables
+# =============================================================================
+# https://github.com/coder/code-server/releases
+ARG CODE_VERSION=4.105.1
+ENV CODE_VERSION=$CODE_VERSION
+
+# =============================================================================
+# System updates and base packages
+# =============================================================================
+# Update base image and create necessary directories
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/* && \
+    mkdir -p /usr/local/bin /usr/local/lib /opt
+
+# =============================================================================
+# Python installation
+# =============================================================================
+RUN apk add --no-cache python3 py3-pip python3-dev && \
+    ln -sf /usr/bin/python3 /usr/local/bin/python
+
+# =============================================================================
+# OpenSSH installation
+# =============================================================================
+RUN apk add --no-cache openssh-client openssh-server && \
+    rm -rf /etc/ssh/ssh_host_*
+
+# =============================================================================
+# Development tools
+# =============================================================================
+RUN apk add --no-cache \
+        build-base \
+        curl \
+        git \
+        gnupg \
+        gzip \
+        jq \
+        nano \
+        sudo \
+        yaml \
+        unzip \
+        wget \
+        ca-certificates \
+        bash
+
+# =============================================================================
+# Google Cloud SDK
+# =============================================================================
+# Install gcloud CLI via install script (recommended for Alpine-based distros)
+RUN curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/opt && \
+    ln -s /opt/google-cloud-sdk/bin/gcloud /usr/local/bin/gcloud && \
+    ln -s /opt/google-cloud-sdk/bin/gsutil /usr/local/bin/gsutil && \
+    ln -s /opt/google-cloud-sdk/bin/bq /usr/local/bin/bq
+
+# =============================================================================
+# Go programming language
+# =============================================================================
+COPY --from=go /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}" \
+    GOPATH="/root/go"
+ENV PATH="${GOPATH}/bin:${PATH}"
+
+# =============================================================================
+# VS Code Server
+# =============================================================================
+# Install dependencies for code-server and then install code-server
+# https://github.com/coder/code-server#getting-started
+RUN apk add --no-cache nodejs npm && \
+    curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=$CODE_VERSION && \
+    ln -sf /usr/bin/code-server /usr/local/bin/code-server
+
+# =============================================================================
+# Go development tools
+# =============================================================================
+# golangci-lint for Go linting
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | \
+    sh -s -- -b /usr/local/bin
+
+# =============================================================================
+# Final system update
+# =============================================================================
+RUN apk update && \
+    apk upgrade && \
+    rm -rf /var/cache/apk/*
+
+# =============================================================================
+# Copy configuration files
+# =============================================================================
+# Merge in files from the assets directory
+COPY ./assets/. /
+
+# Make startup scripts executable and create required runtime directories
+RUN chmod +x /usr/bin/workstation-startup.sh && \
+    chmod +x /etc/workstation-startup.d/*.sh && \
+    mkdir -p /var/run/sshd /home
+
+# =============================================================================
+# Container configuration
+# =============================================================================
+ENTRYPOINT ["/google/scripts/entrypoint.sh"]
